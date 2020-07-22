@@ -13,6 +13,8 @@ Note:
  https://github.com/tonsky/FiraCode/files/412440/FiraCode-Regular-Symbol.zip
  
  just extract it 
- go to folder -> ttf->select any font and press install 
+ go to folder -> ttf->select any font and press install and you are done no config file change nothing.
+ 
+ :restart spacemacs (Done)
  
  
