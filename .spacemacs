@@ -31,19 +31,14 @@ values."
    ;; List of configuration layers to load.
    dotspacemacs-configuration-layers
    '(
+     python
+
      (org :variable org-enable-reveal-js-support t
             org-enable-github-support t
             org-enable-table-editor t
             org-enable-bootstrap-support t
             org-projectile-file "TODO.org"
             )
-
-     (with-eval-after-load 'org-agenda
-       (require 'org-projectile)
-       (push (org-projectile:todo-files) org-agenda-files))
-
-     gnu
-     melpa
      javascript
      windows-scripts
      haskell
@@ -56,7 +51,9 @@ values."
      (auto-completion :variables
                       auto-completion-enable-sort-by-usage t
                       auto-completion-enable-snippets-in-popup t
-                      )
+                      auto-completion-enable-help-tooltip t
+                      auto-completion-private-snippets-directory t
+                     )
      ;; better-defaulits
      emacs-lisp
      git
@@ -65,8 +62,6 @@ values."
      (shell :variables
                shell-default-height 30
                shell-default-position 'bottom)
-
-      lsp
      ;; spell-checking
      ;;syntax-checking
         version-control
@@ -153,11 +148,17 @@ values."
    dotspacemacs-colorize-cursor-according-to-state t
    ;; Default font, or prioritized list of fonts. `powerline-scale' allows to
    ;; quickly tweak the mode-line size to make separators look not too crappy.
-   dotspacemacs-default-font '("Source Code Pro"
-                               :size 13
+   dotspacemacs-default-font '(("Fira Code"
+                               :size 16
                                :weight normal
                                :width normal
                                :powerline-scale 1.1)
+                                ("Fira Code Symbol"
+                                    :size 16
+                                    weight normal
+                                    width normal
+                                    :powerline-scale 1.1
+                                 ))
    ;; The leader key
    dotspacemacs-leader-key "SPC"
    ;; The key used for Emacs commands (M-x) (after pressing on the leader key).
@@ -321,8 +322,8 @@ executes.
  This function is mostly useful for variables that need to be set
 before packages are loaded. If you are unsure, you should try in setting them in
 `dotspacemacs/user-config' first."
-)
 
+)
 (defun dotspacemacs/user-config ()
   "Configuration function for user code.
 This function is called at the very end of Spacemacs initialization after
@@ -330,7 +331,7 @@ layers configuration.
 This is the place where most of your configurations should be done. Unless it is
 explicitly specified that a variable should be set before a package is loaded,
 you should place your code here."
-  (xterm-mouse-mode -1)
+
    ;;;;Yasnippet
   (defun module/misc/yasnippet ()
     "Yassnippet bindings and config."
@@ -339,7 +340,147 @@ you should place your code here."
     :config
     (push 'yas-installed-snippets-dir yas-snippet-dirs)
     )
-  )
+
+
+
+  (global-auto-complete-mode)
+  (set-language-environment "UTF-8")
+  (set-default-coding-systems 'utf-8);; Fira code
+
+;;; Fira code
+;; This works when using emacs --daemon + emacsclient
+(add-hook 'after-make-frame-functions (lambda (frame) (set-fontset-font t '(#Xe100 . #Xe16f) "Fira Code Symbol")))
+;; This works when using emacs without server/client
+(set-fontset-font t '(#Xe100 . #Xe16f) "Fira Code Symbol")
+;; I haven't found one statement that makes both of the above situations work, so I use both for now
+
+(defconst fira-code-font-lock-keywords-alist
+  (mapcar (lambda (regex-char-pair)
+            `(,(car regex-char-pair)
+              (0 (prog1 ()
+                   (compose-region (match-beginning 1)
+                                   (match-end 1)
+                                   ;; The first argument to concat is a string containing a literal tab
+                                   ,(concat "   " (list (decode-char 'ucs (cadr regex-char-pair)))))))))
+          '(("\\(www\\)"                   #Xe100)
+            ("[^/]\\(\\*\\*\\)[^/]"        #Xe101)
+            ("\\(\\*\\*\\*\\)"             #Xe102)
+            ("\\(\\*\\*/\\)"               #Xe103)
+            ("\\(\\*>\\)"                  #Xe104)
+            ("[^*]\\(\\*/\\)"              #Xe105)
+            ("\\(\\\\\\\\\\)"              #Xe106)
+            ("\\(\\\\\\\\\\\\\\)"          #Xe107)
+            ("\\({-\\)"                    #Xe108)
+            ("\\(\\[\\]\\)"                #Xe109)
+            ("\\(::\\)"                    #Xe10a)
+            ("\\(:::\\)"                   #Xe10b)
+            ("[^=]\\(:=\\)"                #Xe10c)
+            ("\\(!!\\)"                    #Xe10d)
+            ("\\(!=\\)"                    #Xe10e)
+            ("\\(!==\\)"                   #Xe10f)
+            ("\\(-}\\)"                    #Xe110)
+            ("\\(--\\)"                    #Xe111)
+            ("\\(---\\)"                   #Xe112)
+            ("\\(-->\\)"                   #Xe113)
+            ("[^-]\\(->\\)"                #Xe114)
+            ("\\(->>\\)"                   #Xe115)
+            ("\\(-<\\)"                    #Xe116)
+            ("\\(-<<\\)"                   #Xe117)
+            ("\\(-~\\)"                    #Xe118)
+            ("\\(#{\\)"                    #Xe119)
+            ("\\(#\\[\\)"                  #Xe11a)
+            ("\\(##\\)"                    #Xe11b)
+            ("\\(###\\)"                   #Xe11c)
+            ("\\(####\\)"                  #Xe11d)
+            ("\\(#(\\)"                    #Xe11e)
+            ("\\(#\\?\\)"                  #Xe11f)
+            ("\\(#_\\)"                    #Xe120)
+            ("\\(#_(\\)"                   #Xe121)
+            ("\\(\\.-\\)"                  #Xe122)
+            ("\\(\\.=\\)"                  #Xe123)
+            ("\\(\\.\\.\\)"                #Xe124)
+            ("\\(\\.\\.<\\)"               #Xe125)
+            ("\\(\\.\\.\\.\\)"             #Xe126)
+            ("\\(\\?=\\)"                  #Xe127)
+            ("\\(\\?\\?\\)"                #Xe128)
+            ("\\(;;\\)"                    #Xe129)
+            ("\\(/\\*\\)"                  #Xe12a)
+            ("\\(/\\*\\*\\)"               #Xe12b)
+            ("\\(/=\\)"                    #Xe12c)
+            ("\\(/==\\)"                   #Xe12d)
+            ("\\(/>\\)"                    #Xe12e)
+            ("\\(//\\)"                    #Xe12f)
+            ("\\(///\\)"                   #Xe130)
+            ("\\(&&\\)"                    #Xe131)
+            ("\\(||\\)"                    #Xe132)
+            ("\\(||=\\)"                   #Xe133)
+            ("[^|]\\(|=\\)"                #Xe134)
+            ("\\(|>\\)"                    #Xe135)
+            ("\\(\\^=\\)"                  #Xe136)
+            ("\\(\\$>\\)"                  #Xe137)
+            ("\\(\\+\\+\\)"                #Xe138)
+            ("\\(\\+\\+\\+\\)"             #Xe139)
+            ("\\(\\+>\\)"                  #Xe13a)
+            ("\\(=:=\\)"                   #Xe13b)
+            ("[^!/]\\(==\\)[^>]"           #Xe13c)
+            ("\\(===\\)"                   #Xe13d)
+            ("\\(==>\\)"                   #Xe13e)
+            ("[^=]\\(=>\\)"                #Xe13f)
+            ("\\(=>>\\)"                   #Xe140)
+            ("\\(<=\\)"                    #Xe141)
+            ("\\(=<<\\)"                   #Xe142)
+            ("\\(=/=\\)"                   #Xe143)
+            ("\\(>-\\)"                    #Xe144)
+            ("\\(>=\\)"                    #Xe145)
+            ("\\(>=>\\)"                   #Xe146)
+            ("[^-=]\\(>>\\)"               #Xe147)
+            ("\\(>>-\\)"                   #Xe148)
+            ("\\(>>=\\)"                   #Xe149)
+            ("\\(>>>\\)"                   #Xe14a)
+            ("\\(<\\*\\)"                  #Xe14b)
+            ("\\(<\\*>\\)"                 #Xe14c)
+            ("\\(<|\\)"                    #Xe14d)
+            ("\\(<|>\\)"                   #Xe14e)
+            ("\\(<\\$\\)"                  #Xe14f)
+            ("\\(<\\$>\\)"                 #Xe150)
+            ("\\(<!--\\)"                  #Xe151)
+            ("\\(<-\\)"                    #Xe152)
+            ("\\(<--\\)"                   #Xe153)
+            ("\\(<->\\)"                   #Xe154)
+            ("\\(<\\+\\)"                  #Xe155)
+            ("\\(<\\+>\\)"                 #Xe156)
+            ("\\(<=\\)"                    #Xe157)
+            ("\\(<==\\)"                   #Xe158)
+            ("\\(<=>\\)"                   #Xe159)
+            ("\\(<=<\\)"                   #Xe15a)
+            ("\\(<>\\)"                    #Xe15b)
+            ("[^-=]\\(<<\\)"               #Xe15c)
+            ("\\(<<-\\)"                   #Xe15d)
+            ("\\(<<=\\)"                   #Xe15e)
+            ("\\(<<<\\)"                   #Xe15f)
+            ("\\(<~\\)"                    #Xe160)
+            ("\\(<~~\\)"                   #Xe161)
+            ("\\(</\\)"                    #Xe162)
+            ("\\(</>\\)"                   #Xe163)
+            ("\\(~@\\)"                    #Xe164)
+            ("\\(~-\\)"                    #Xe165)
+            ("\\(~=\\)"                    #Xe166)
+            ("\\(~>\\)"                    #Xe167)
+            ("[^<]\\(~~\\)"                #Xe168)
+            ("\\(~~>\\)"                   #Xe169)
+            ("\\(%%\\)"                    #Xe16a)
+            ("[0\[]\\(x\\)"                #Xe16b)
+            ("[^:=]\\(:\\)[^:=]"           #Xe16c)
+            ("[^\\+<>]\\(\\+\\)[^\\+<>]"   #Xe16d)
+            ("[^\\*/<>]\\(\\*\\)[^\\*/<>]" #Xe16f))))
+
+(defun add-fira-code-symbol-keywords ()
+  (font-lock-add-keywords nil fira-code-font-lock-keywords-alist))
+(add-hook 'prog-mode-hook
+          #'add-fira-code-symbol-keywords)
+
+)
+
 
 ;; Do not write anything past this comment. This is where Emacs will
 ;; auto-generate custom variable definitions.
@@ -350,7 +491,7 @@ you should place your code here."
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
    (quote
-    (org-projectile org-category-capture org-present org-pomodoro alert log4e gntp org-mime org-download htmlize gnuplot org-runbook help-find-org-mode xterm-color shell-pop multi-term eshell-z eshell-prompt-extras esh-help flycheck-pos-tip pos-tip flycheck-haskell smeargle orgit magit-gitflow magit-popup helm-gitignore helm-company helm-c-yasnippet gitignore-mode gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link git-gutter-fringe+ git-gutter-fringe fringe-helper git-gutter+ git-gutter fuzzy evil-magit magit git-commit with-editor transient diff-hl company-statistics company-cabal auto-yasnippet ac-ispell auto-complete web-beautify livid-mode skewer-mode simple-httpd json-mode json-snatcher json-reformat js2-refactor multiple-cursors js2-mode js-doc coffee-mode powershell intero flycheck hlint-refactor hindent helm-hoogle haskell-snippets yasnippet company-ghci company-ghc ghc company haskell-mode cmm-mode ws-butler winum which-key volatile-highlights vi-tilde-fringe uuidgen use-package toc-org spaceline powerline restart-emacs request rainbow-delimiters popwin persp-mode pcre2el paradox spinner org-plus-contrib org-bullets open-junk-file neotree move-text macrostep lorem-ipsum linum-relative link-hint indent-guide hydra lv hungry-delete hl-todo highlight-parentheses highlight-numbers parent-mode highlight-indentation helm-themes helm-swoop helm-projectile projectile pkg-info epl helm-mode-manager helm-make helm-flx helm-descbinds helm-ag google-translate golden-ratio flx-ido flx fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired f evil-tutor evil-surround evil-search-highlight-persist highlight evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-lisp-state smartparens evil-indent-plus evil-iedit-state iedit evil-exchange evil-escape evil-ediff evil-args evil-anzu anzu evil goto-chg undo-tree eval-sexp-fu elisp-slime-nav dumb-jump dash s diminish define-word column-enforce-mode clean-aindent-mode bind-map bind-key auto-highlight-symbol auto-compile packed aggressive-indent adaptive-wrap ace-window ace-link ace-jump-helm-line helm avy helm-core popup async))))
+    (company-quickhelp yapfify pyvenv pytest pyenv-mode py-isort pip-requirements live-py-mode hy-mode dash-functional helm-pydoc cython-mode company-anaconda anaconda-mode pythonic firecode-theme fira-code-mode org-projectile org-category-capture org-present org-pomodoro alert log4e gntp org-mime org-download htmlize gnuplot org-runbook help-find-org-mode xterm-color shell-pop multi-term eshell-z eshell-prompt-extras esh-help flycheck-pos-tip pos-tip flycheck-haskell smeargle orgit magit-gitflow magit-popup helm-gitignore helm-company helm-c-yasnippet gitignore-mode gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link git-gutter-fringe+ git-gutter-fringe fringe-helper git-gutter+ git-gutter fuzzy evil-magit magit git-commit with-editor transient diff-hl company-statistics company-cabal auto-yasnippet ac-ispell auto-complete web-beautify livid-mode skewer-mode simple-httpd json-mode json-snatcher json-reformat js2-refactor multiple-cursors js2-mode js-doc coffee-mode powershell intero flycheck hlint-refactor hindent helm-hoogle haskell-snippets yasnippet company-ghci company-ghc ghc company haskell-mode cmm-mode ws-butler winum which-key volatile-highlights vi-tilde-fringe uuidgen use-package toc-org spaceline powerline restart-emacs request rainbow-delimiters popwin persp-mode pcre2el paradox spinner org-plus-contrib org-bullets open-junk-file neotree move-text macrostep lorem-ipsum linum-relative link-hint indent-guide hydra lv hungry-delete hl-todo highlight-parentheses highlight-numbers parent-mode highlight-indentation helm-themes helm-swoop helm-projectile projectile pkg-info epl helm-mode-manager helm-make helm-flx helm-descbinds helm-ag google-translate golden-ratio flx-ido flx fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired f evil-tutor evil-surround evil-search-highlight-persist highlight evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-lisp-state smartparens evil-indent-plus evil-iedit-state iedit evil-exchange evil-escape evil-ediff evil-args evil-anzu anzu evil goto-chg undo-tree eval-sexp-fu elisp-slime-nav dumb-jump dash s diminish define-word column-enforce-mode clean-aindent-mode bind-map bind-key auto-highlight-symbol auto-compile packed aggressive-indent adaptive-wrap ace-window ace-link ace-jump-helm-line helm avy helm-core popup async))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
